@@ -43,21 +43,22 @@ public class main {
 			}
 			
 				String filepath = "D:\\test\\" + filename;
+				
+				File file = new File(filepath);
+				if (!file.exists()) {
+					System.out.println("文件不存在");
+					continue;
+				}
+				
 				AFile aFile = new AFile();
 				aFile = findFiles(filepath);
+				
 				if (bString.equals("-c"))
 					System.out.println("字符数为" + aFile.charNumb);
 				else if (bString.equals("-w"))
 					System.out.println("单词数为" + aFile.wordNumb);
 				else if (bString.equals("-l"))
 					System.out.println("行数为" + aFile.lineNumb);
-				else if (bString.equals("-s"))
-					System.out.println("字符数为" + aFile.charNumb +
-							"\n单词数为" + aFile.wordNumb +
-							"\n行数为" + aFile.lineNumb + 
-							"\n空行数为：" + aFile.empleLine +
-							"\n代码行数为：" + aFile.codeLine +
-							"\n注释行数为：" + aFile.nodeLine);
 				else if (bString.equals("-a"))
 					System.out.println("空行数为：" + aFile.empleLine 
 							+ " 代码行数为：" + aFile.codeLine + " 注释行数为：" + aFile.nodeLine);
@@ -67,30 +68,31 @@ public class main {
 	}
 	
 	private static AFile findFiles(String file_path) {
+
 		File file = new File(file_path);
 		AFile aFile = new AFile();
 		
 		if (file.isDirectory()) { // 判断为文件夹
-			File[] files = file.listFiles();
+			File[] files = file.listFiles(); // 获取文件列表
 			if (files == null) {
 				System.err.println("找不到");
 			} else if (files.length == 0) {
 				System.out.println("目录为空");
 			} else {
-				for (File f : files) {
-					if (f.isDirectory())
+				for (File f : files) { // 循环处理文件
+					if (f.isDirectory()) // 判断为文件夹
 						findFiles(f.getPath());
-					else if (f.isFile()) {
-						aFile.charNumb += getCount(f.getPath()).charNumb;
-						aFile.wordNumb += getCount(f.getPath()).wordNumb;
-						aFile.lineNumb += getCount(f.getPath()).lineNumb;
-						aFile.codeLine += getCount(f.getPath()).codeLine;
-						aFile.empleLine += getCount(f.getPath()).empleLine;
-						aFile.nodeLine += getCount(f.getPath()).nodeLine;
+					else if (f.isFile()) { // 判断为文件
+						System.out.println("文件名为：" + f.getName() + "\n字符数为" + getCount(f.getPath()).charNumb +
+								"\n单词数为" + getCount(f.getPath()).wordNumb +
+								"\n行数为" + getCount(f.getPath()).lineNumb + 
+								"\n空行数为：" + getCount(f.getPath()).empleLine +
+								"\n代码行数为：" + getCount(f.getPath()).codeLine +
+								"\n注释行数为：" + getCount(f.getPath()).nodeLine);
 					}
 				}
 			}
-		} else if (file.isFile()) { 
+		} else if (file.isFile() && file.exists()) { // 判断为文件
 			aFile = getCount(file.getPath());
 		}
 		
@@ -102,15 +104,16 @@ public class main {
 		try {
 			BufferedReader brin = new BufferedReader(new FileReader(filepath));
 			String s;
-			int state = 0;
+			int state = 0; // 判断是否在单词内
 			
+			// 使用正则表达式判断注释行
 			String regxNodeBegin = "(\\S?)\\s*/\\*.*";
 			String regxNodeEnd = "(.*\\*/\\s*)\\S?";
 			String regxNode = "(\\s*)(\\S?)(//+).*";
 			
 			while ((s = brin.readLine()) != null) {
 				++ aFile.lineNumb;
-				int countLetter = 0;
+				int countLetter = 0; // 判断非空格字符数量
 				
 				for (int i = 0; i < s.length(); i++) {
 					++aFile.charNumb;
@@ -129,7 +132,7 @@ public class main {
 				if (s.matches(regxNodeBegin) || s.matches(regxNodeEnd)
 						|| s.matches(regxNode))
 					++aFile.nodeLine;
-				else if (countLetter > 1)
+				else if (countLetter > 1) // 如果非空格字符数多于1
 					++aFile.codeLine;
 				else 
 					++aFile.empleLine;
